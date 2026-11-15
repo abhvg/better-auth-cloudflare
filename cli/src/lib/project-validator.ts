@@ -37,12 +37,15 @@ export async function validateProject(projectPath: string): Promise<ProjectValid
             };
         }
 
+        const shell = process.platform === "win32";
+
         // Try to use TypeScript compiler - first try with npx --yes, then fallback to direct tsc
         let result = spawnSync("npx", ["--yes", "typescript@latest", "tsc", "--noEmit"], {
             cwd: projectPath,
             encoding: "utf8",
             stdio: "pipe",
             timeout: 60000, // 60 second timeout for full project compilation
+            shell,
         });
 
         // If npx fails, try bunx tsc command
@@ -52,6 +55,7 @@ export async function validateProject(projectPath: string): Promise<ProjectValid
                 encoding: "utf8",
                 stdio: "pipe",
                 timeout: 60000, // 60 second timeout for full project compilation
+                shell,
             });
         }
 
@@ -62,6 +66,7 @@ export async function validateProject(projectPath: string): Promise<ProjectValid
                 encoding: "utf8",
                 stdio: "pipe",
                 timeout: 60000, // 60 second timeout for full project compilation
+                shell,
             });
         }
 

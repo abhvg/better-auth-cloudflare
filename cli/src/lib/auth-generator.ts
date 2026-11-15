@@ -224,49 +224,60 @@ function generateHonoCloudflareConfig(config: AuthConfig): string {
     if (config.resources.r2) {
         parts.push(`
                 // R2 configuration for file storage (${config.bindings.r2 || "R2_BUCKET"} binding from wrangler.toml)
-                ...(env?.${config.bindings.r2 || "R2_BUCKET"} ? {
-                    r2: {
-                        bucket: env.${config.bindings.r2 || "R2_BUCKET"},
-                        maxFileSize: 2 * 1024 * 1024, // 2MB
-                        allowedTypes: [".jpg", ".jpeg", ".png", ".gif"],
-                        additionalFields: {
-                            category: { type: "string", required: false },
-                            isPublic: { type: "boolean", required: false },
-                            description: { type: "string", required: false },
-                        },
-                        hooks: {
-                            upload: {
-                                before: async (file, ctx) => {
-                                    // Only allow authenticated users to upload files
-                                    if (ctx.session === null) {
-                                        return null; // Blocks upload
-                                    }
+                ...(env
+                    ? {
+                          r2: {
+                              bucket: env.${config.bindings.r2 || "R2_BUCKET"},
+                              maxFileSize: 2 * 1024 * 1024, // 2MB
+                              allowedTypes: [".jpg", ".jpeg", ".png", ".gif"],
+                              additionalFields: {
+                                  category: { type: "string", required: false },
+                                  isPublic: { type: "boolean", required: false },
+                                  description: { type: "string", required: false },
+                              },
+                              hooks: {
+                                  upload: {
+                                      before: async (file, ctx) => {
+                                          // Only allow authenticated users to upload files
+                                          if (ctx.session === null) {
+                                              return null; // Blocks upload
+                                          }
 
-                                    // Only allow paid users to upload files (for example)
-                                    const isPaidUser = (userId: string) => true; // example
-                                    if (isPaidUser(ctx.session.user.id) === false) {
-                                        return null; // Blocks upload
-                                    }
+                                          // Only allow paid users to upload files (for example)
+                                          const isPaidUser = (userId: string) => true; // example
+                                          if (isPaidUser(ctx.session.user.id) === false) {
+                                              return null; // Blocks upload
+                                          }
 
-                                    // Allow upload
-                                },
-                                after: async (file, ctx) => {
-                                    // Track your analytics (for example)
-                                    console.log("File uploaded:", file);
-                                },
-                            },
-                            download: {
-                                before: async (file, ctx) => {
-                                    // Only allow user to access their own files (by default all files are public)
-                                    if (file.isPublic === false && file.userId !== ctx.session?.user.id) {
-                                        return null; // Blocks download
-                                    }
-                                    // Allow download
-                                },
-                            },
-                        },
-                    },
-                } : {}),`);
+                                          // Allow upload
+                                      },
+                                      after: async (file, ctx) => {
+                                          // Track your analytics (for example)
+                                          console.log("File uploaded:", file);
+                                      },
+                                  },
+                                  download: {
+                                      before: async (file, ctx) => {
+                                          // Only allow user to access their own files (by default all files are public)
+                                          if (file.isPublic === false && file.userId !== ctx.session?.user.id) {
+                                              return null; // Blocks download
+                                          }
+                                          // Allow download
+                                      },
+                                  },
+                              },
+                          },
+                      }
+                    : {
+                          r2: {
+                              bucket: {} as any,
+                              additionalFields: {
+                                  category: { type: "string", required: false },
+                                  isPublic: { type: "boolean", required: false },
+                                  description: { type: "string", required: false },
+                              },
+                          },
+                      }),`);
     }
 
     return parts.join("");

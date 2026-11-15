@@ -220,6 +220,7 @@ function bunSpawnSync(command: string, args: string[], cwd?: string, env?: Recor
         cwd,
         encoding: "utf8",
         env: env ? { ...process.env, ...env } : process.env,
+        shell: process.platform === "win32",
     });
 
     // Enhanced error logging for debugging
@@ -1282,6 +1283,15 @@ async function generate(cliArgs?: CliArgs) {
         debugLog(`Creating .env file: ${envPath}`);
         const envContent = `# Database connection string for Drizzle migrations\nDATABASE_URL="${answers.hdConnectionString}"\n`;
         writeFileSync(envPath, envContent, "utf8");
+    }
+
+    // Create .dev.vars for local development if not already present
+    const devVarsPath = join(targetDir, ".dev.vars");
+    if (!existsSync(devVarsPath)) {
+        debugLog(`Creating .dev.vars file: ${devVarsPath}`);
+        const randomSecret = require("crypto").randomBytes(32).toString("hex");
+        const devVarsContent = `# Local development secrets for Cloudflare Workers / Better Auth\nBETTER_AUTH_SECRET=${randomSecret}\nBETTER_AUTH_URL=http://localhost:8787\n`;
+        writeFileSync(devVarsPath, devVarsContent, "utf8");
     }
 
     // Clear existing schema and migration files for non-D1 databases

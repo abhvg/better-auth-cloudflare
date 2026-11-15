@@ -72,30 +72,34 @@ export class TypeScriptValidator {
             // Try to use TypeScript compiler - use local installation from CLI project
             // Run from CLI project directory but specify the temp directory's tsconfig
             const cliProjectDir = join(__dirname, "..", "..");
+            const shell = process.platform === "win32";
             let result = spawnSync("npx", ["tsc", "--project", this.tempDir, "--noEmit"], {
                 cwd: cliProjectDir,
                 encoding: "utf8",
                 stdio: "pipe",
                 timeout: 30000, // 30 second timeout
+                shell,
             });
 
             // If npx fails, try bunx tsc command
-            if (result.status !== 0 && result.error) {
+            if (result.status !== 0) {
                 result = spawnSync("bunx", ["tsc", "--project", this.tempDir, "--noEmit"], {
                     cwd: cliProjectDir,
                     encoding: "utf8",
                     stdio: "pipe",
                     timeout: 30000, // 30 second timeout
+                    shell,
                 });
             }
 
             // If bunx fails, try direct tsc command (global installation)
-            if (result.status !== 0 && result.error) {
+            if (result.status !== 0) {
                 result = spawnSync("tsc", ["--project", this.tempDir, "--noEmit"], {
                     cwd: cliProjectDir,
                     encoding: "utf8",
                     stdio: "pipe",
                     timeout: 30000, // 30 second timeout
+                    shell,
                 });
             }
 

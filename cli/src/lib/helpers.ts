@@ -448,9 +448,10 @@ export interface GitInitResult {
 
 export function initializeGitRepository(projectPath: string): GitInitResult {
     const { spawnSync } = require("child_process") as typeof import("child_process");
+    const shell = process.platform === "win32";
 
     // Check if git is available
-    const gitCheck = spawnSync("git", ["--version"], { stdio: "pipe", encoding: "utf8" });
+    const gitCheck = spawnSync("git", ["--version"], { stdio: "pipe", encoding: "utf8", shell });
     if (gitCheck.status !== 0) {
         return { success: false, error: "Git is not installed or not available in PATH" };
     }
@@ -460,6 +461,7 @@ export function initializeGitRepository(projectPath: string): GitInitResult {
         cwd: projectPath,
         stdio: "pipe",
         encoding: "utf8",
+        shell,
     });
 
     if (initResult.status !== 0) {
@@ -471,6 +473,7 @@ export function initializeGitRepository(projectPath: string): GitInitResult {
         cwd: projectPath,
         stdio: "pipe",
         encoding: "utf8",
+        shell,
     });
 
     if (addResult.status !== 0) {
@@ -482,6 +485,7 @@ export function initializeGitRepository(projectPath: string): GitInitResult {
         cwd: projectPath,
         stdio: "pipe",
         encoding: "utf8",
+        shell,
     });
 
     if (commitResult.status !== 0) {
